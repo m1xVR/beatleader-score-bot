@@ -1,0 +1,19 @@
+{
+  "name": "beatleader-score-bot",
+  "version": "1.0.0",
+  "description": "This is a discord bot for tracking the scores of specified users on the BeatLeader board and posting embed messages in the specified channel.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "m1x",
+  "license": "ISC",
+  "dependencies": {
+    "async-wait-until": "^2.0.12",
+    "discord.js": "^14.13.0",
+    "fs": "^0.0.1-security",
+    "https": "^1.0.0",
+    "node-cron": "^3.0.2",
+    "node-fetch": "^3.3.2"
+  }
+}
