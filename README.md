@@ -14,15 +14,15 @@ The score will be published when one of the conditions is met:
 - `/unlink [userid]` -> unlink a player's account from monitoring.
 - `/bsr [mapcode]` -> show map details from a BeatSaber. 
 
-###Other commands:
+### Other commands:
 
 - `!bsr [mapcode]` -> same as /bsr
 
 # Installation
 
-This bot runs on [node.js](https://nodejs.org).
+This bot runs on node.js.
 
-1. Install [node.js](https://nodejs.org/en/download/)
+1. Install node.js
 2. Run `npm install` and make sure it succeeds
 3. Set up your `config.json`:
 - set `BOT_TOKEN` -> Discord bot TOKEN
@@ -34,5 +34,8 @@ This bot runs on [node.js](https://nodejs.org).
 
 Preview of score message:
 
+![img](./scr/scoremessage.png)
 
 Preview of map details message:
+
+![img](./scr/bsrmessage.png)
