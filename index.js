@@ -31,15 +31,18 @@ var PlayersDataJSON;
 
 var working = false;
 
-var task = cron.schedule("*/45 * * * * *", async function () {	
+var task = cron.schedule("*/2 * * * *", async function () {
 
 	working = true;
-
-	console.log("");
-	console.log("New Iteration");	
 	
 	NewCheck = new Date(Date.now());
-	console.log(NewCheck);
+
+	console.log("----------------------------------------------------------------");
+	console.log("New Iteration");
+	console.log("The search interval:");	
+	console.log(DateTime(LastCheck));
+	console.log(DateTime(NewCheck));
+	console.log("");	
 	
 	TimeFrom = LastCheck.getTime()/ 1000 | 0;
 	TimeTo = NewCheck.getTime()/ 1000 | 0;
@@ -49,9 +52,10 @@ var task = cron.schedule("*/45 * * * * *", async function () {
 		await DrawScore(PlayersDataText[i].blUserID);	
 	}
 	
-	LastCheck = NewCheck;
+	LastCheck = addSeconds(NewCheck,1);
 	
-	console.log('End Iteration');
+	console.log("End Iteration");
+	console.log("----------------------------------------------------------------");
 	console.log("");
 
 	working = false;
@@ -73,7 +77,7 @@ client.once('ready', () => {
 
 	LastCheck = TimeFrom;
 	console.log("");	
-	console.log(LastCheck);
+	console.log("Start working at " + DateTime(LastCheck));
 	console.log("");
 	
 	try {
@@ -95,7 +99,7 @@ client.once('ready', () => {
 
 	if (AUTOSTART_SCHEDULE) {
 		console.log("");	
-		console.log("Starting monitoring!");
+		console.log("Start monitoring!");
 		console.log("");
 
 		task.start();
@@ -109,18 +113,32 @@ client.on("messageCreate", async function(message) {
 
 	var mapcode = ""; 
 
-	if (message.author.bot) return;
-	if (!message.content.startsWith(prefix)) return;
-
 	const commandBody = message.content.slice(prefix.length);
 	const args = commandBody.split(' ');
 	const command = args.shift().toLowerCase();
+
+	if (message.author.bot) return;
+
+	let REQ_CHANNEL_ID = message.channel.id;
+
+	try 
+	{
+		let user = message.mentions.users.first();
+		if ((user != undefined) && (user.id === config.clientId)) {
+			let emoji = [ ":heart:", ":broken_heart:"];
+			client.channels.fetch(REQ_CHANNEL_ID)
+			.then(channel=> channel.send("<@" + message.author.id + ">, " + emoji[getRandomInt(2)]));
+		}
+	} catch (error) {
+		console.log("Something happend!");
+	}
+
+	if (!message.content.startsWith(prefix)) return;
 
 	if  (ENABLED_BSR_COMMAND) {
 		if ((command === "bsr") || (command === "map")) {
 			mapcode = args[0];
 			if (mapcode != undefined) {
-				let REQ_CHANNEL_ID = message.channel.id;
 				if (IsHex(mapcode)) {
 					console.log("Map code received!");
 					await DrawMap(mapcode, REQ_CHANNEL_ID);	
@@ -209,7 +227,7 @@ client.on('interactionCreate', async interaction => {
 				}
 				
 				console.log("");	
-				console.log("Starting monitoring!");
+				console.log("Star monitoring!");
 				console.log("");
 
 				task.start();
@@ -266,7 +284,7 @@ client.on('interactionCreate', async interaction => {
 		}
 
 		console.log("");	
-		console.log("Starting monitoring!");
+		console.log("Star monitoring!");
 		console.log("");
 		
 		task.start();
@@ -394,8 +412,10 @@ async function DrawScore(userID) {
 							if (post) {
 				
 								console.log("Pepechad! Drawing card...")
-						
+
+								let embedcolor = '#aa28aa';					
 								let url3 = BEATLEADER_URL + "/u/" + userID;
+								
 								if (scores.modifiers != "") scores.accuracy = scores.accuracy + " (" + scores.modifiers + ")";
 				
 									try {
@@ -408,7 +428,7 @@ async function DrawScore(userID) {
 											'Open replay': bold("Open replay:　") + `[Link](${scores.replayurl})`,
 										};
 										const EmbedCard = new EmbedBuilder()						
-										.setColor(Colors.Yellow)
+										.setColor(embedcolor)
 										.setTitle(scores.songauthor+ " - " + scores.mapname + " "+ scores.subName)
 										.setURL(scores.mapurl)
 										.setAuthor({ name: scores.playername, iconURL: scores.avatar, url: url3 })
@@ -617,4 +637,12 @@ function formatTime(sec) {
 
 var rounded = function(number){
     return +number.toFixed(2);
+}
+
+function getRandomInt(max) {
+	return Math.floor(Math.random() * max);
+}
+
+function DateTime(date) {
+	return date.toLocaleDateString() + " " + date.toLocaleTimeString();
 }
