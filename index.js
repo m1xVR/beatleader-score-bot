@@ -23,6 +23,7 @@ const WEIGHT_TOP_20 = 0.5;
 const ENABLE_COUNTRY_RANKCHANGE_MON = false;
 const RANK_TOP = 50;
 const RANK_TOP_COUNTRIES = "AM%2CAZ%2CBY%2CKG%2CKZ%2CMD%2CRU%2CTJ%2CUA%2CUZ";
+const NAME_RANK_TOP = 'BeatLeader CIS TOP';
 
 // !bsr [mapid]
 const ENABLE_BSR_COMMAND = true;
@@ -701,7 +702,7 @@ async function CheckRankChange() {
 
 										if (new_scorerank[y][0] === 0) {
 											var fields = {
-												1: "Leaderboard:　" + 'BeatLeader CIS TOP'+ RANK_TOP,
+												1: "Leaderboard:　" + NAME_RANK_TOP + RANK_TOP,
 												2: "Player:　" + fixbbcode(new_scorerank[y][1]),
 												3: "PP:　" + rounded(new_scorerank[y][5]),
 												4: "```",
@@ -711,7 +712,7 @@ async function CheckRankChange() {
 											};
 										} else {
 											var fields = {
-												1: "Leaderboard:　" + 'BeatLeader CIS TOP'+ RANK_TOP,
+												1: "Leaderboard:　" + NAME_RANK_TOP + RANK_TOP,
 												2: "Player:　" + fixbbcode(new_scorerank[y][1]),
 												3: "PP:　" + rounded(new_scorerank[y][5]),
 												4: "```",
