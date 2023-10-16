@@ -43,6 +43,8 @@ Important variables:
 - `RANK_TOP_COUNTRIES` -> list of countries to monitoring
 - `NAME_RANK_TOP` -> custome leaderboard name for message 
 
+# Previews
+
 Preview of score message:
 
 ![img](./scr/scoremessage.png)
