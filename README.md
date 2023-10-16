@@ -6,7 +6,7 @@ The score will be published when one of the conditions is met:
 
 - top 10 score on the ranked map;
 - top 8 score of personal pp scores;
-- top 100 score on the ranked map and top 25 pp score of personal scores.
+- top 100 score on the ranked map and top 25 score of personal scores.
 
 Also bot can monitoring change ranking of top N players of county or some countries.
 
