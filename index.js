@@ -4,11 +4,13 @@ const cron = require('node-cron');
 const fs = require('fs');
 const waitUntil = require('async-wait-until').waitUntil;
 
+const AUTOSTART_MAIN_SCHEDULE = true;
+
 const SCORES_CHANNEL_ID = config.channelId;
 const BLAPI_URL = 'https://api.beatleader.xyz';
 const BLREPLAY_URL = 'https://replay.beatleader.xyz';
 const BEATLEADER_URL = 'https://www.beatleader.xyz';
-
+const ARC_VIEWER_URL = 'https://allpoland.github.io/ArcViewer';
 const BSAPI_URL = 'https://api.beatsaver.com';
 const BEATSAVER_URL = 'https://beatsaver.com';
 
@@ -17,8 +19,16 @@ const POST_RANK_100 = 100;
 const WEIGHT_TOP_8 = 0.77;
 const WEIGHT_TOP_20 = 0.5;
 
-const ENABLED_BSR_COMMAND = true;
-const AUTOSTART_SCHEDULE = true;
+// CIS TOP 50 players
+const ENABLE_COUNTRY_RANKCHANGE_MON = false;
+const RANK_TOP = 50;
+const RANK_TOP_COUNTRIES = "AM%2CAZ%2CBY%2CKG%2CKZ%2CMD%2CRU%2CTJ%2CUA%2CUZ";
+
+// !bsr [mapid]
+const ENABLE_BSR_COMMAND = true;
+
+var new_scorerank = [];
+var old_scorerank = [];
 
 var TimeFrom;
 var TimeTo;
@@ -30,6 +40,7 @@ var PlayersDataText = {};
 var PlayersDataJSON;
 
 var working = false;
+var rc_mon_flag = false;
 
 var task = cron.schedule("*/2 * * * *", async function () {
 
@@ -53,6 +64,14 @@ var task = cron.schedule("*/2 * * * *", async function () {
 	}
 	
 	LastCheck = addSeconds(NewCheck,1);
+
+	if (rc_mon_flag) {
+		console.log("Start check for rank up!");
+		await CheckRankChange();
+		console.log("End check for rank up!");
+		console.log("");
+		rc_mon_flag = false;
+	}
 	
 	console.log("End Iteration");
 	console.log("----------------------------------------------------------------");
@@ -60,6 +79,13 @@ var task = cron.schedule("*/2 * * * *", async function () {
 
 	working = false;
 
+}, {
+	scheduled: false,
+	timezone: "Europe/Minsk"
+});
+
+var task2 = cron.schedule("*/10 * * * *", async function () {
+	rc_mon_flag = true;
 }, {
 	scheduled: false,
 	timezone: "Europe/Minsk"
@@ -97,13 +123,25 @@ client.once('ready', () => {
 		}
 	}	
 
-	if (AUTOSTART_SCHEDULE) {
-		console.log("");	
-		console.log("Start monitoring!");
-		console.log("");
+	console.log("");
 
+	if (AUTOSTART_MAIN_SCHEDULE) {
+		console.log("Start monitoring!");
 		task.start();
+
+			if (ENABLE_COUNTRY_RANKCHANGE_MON) {
+				console.log("Start country rank change monitoring!");
+				rc_mon_flag = true;
+				task2.start();
+			} else {
+				console.log("Country rank change monitoring disabled!");
+			}
+
+	} else {
+		console.log("Monitoring disabled!");
 	}
+	
+	console.log("");
 
 });
 
@@ -121,21 +159,22 @@ client.on("messageCreate", async function(message) {
 
 	let REQ_CHANNEL_ID = message.channel.id;
 
-	try 
-	{
-		let user = message.mentions.users.first();
-		if ((user != undefined) && (user.id === config.clientId)) {
-			let emoji = [ ":heart:", ":broken_heart:"];
-			client.channels.fetch(REQ_CHANNEL_ID)
-			.then(channel=> channel.send("<@" + message.author.id + ">, " + emoji[getRandomInt(2)]));
-		}
-	} catch (error) {
-		console.log("Something happend!");
-	}
+	// chat bot response when it receives a ping
+	// try 
+	// {
+	// 	let user = message.mentions.users.first();
+	// 	if ((user != undefined) && (user.id === config.clientId)) {
+	// 		let emoji = [ ":heart:", ":broken_heart:"];
+	// 		client.channels.fetch(REQ_CHANNEL_ID)
+	// 		.then(channel=> channel.send("<@" + message.author.id + ">, " + emoji[getRandomInt(2)]));
+	// 	}
+	// } catch (error) {
+	// 	console.log("Something happend!");
+	// }
 
 	if (!message.content.startsWith(prefix)) return;
 
-	if  (ENABLED_BSR_COMMAND) {
+	if  (ENABLE_BSR_COMMAND) {
 		if ((command === "bsr") || (command === "map")) {
 			mapcode = args[0];
 			if (mapcode != undefined) {
@@ -227,7 +266,7 @@ client.on('interactionCreate', async interaction => {
 				}
 				
 				console.log("");	
-				console.log("Star monitoring!");
+				console.log("Start monitoring!");
 				console.log("");
 
 				task.start();
@@ -284,7 +323,7 @@ client.on('interactionCreate', async interaction => {
 		}
 
 		console.log("");	
-		console.log("Star monitoring!");
+		console.log("Start monitoring!");
 		console.log("");
 		
 		task.start();
@@ -316,6 +355,7 @@ async function DrawScore(userID) {
 		accuracy: "",
 		difficulty: "",
 		replayurl: "",
+		replayurl2: "",
 		mapper: "",
 		mapcoverurl: "",
 		avatar: "",
@@ -334,6 +374,7 @@ async function DrawScore(userID) {
 		var weightnum;
 		var ranknum;
 		var post;
+		var ppnum;
 		
 		let url = BLAPI_URL + "/player/" + userID;
 
@@ -391,6 +432,7 @@ async function DrawScore(userID) {
 							scores.accuracy = rounded(json.data[i].accuracy * 100)+"%";
 							scores.difficulty = json.data[i].leaderboard.difficulty.difficultyName;
 							scores.replayurl = BLREPLAY_URL + "/?scoreId=" + json.data[i].id;
+							scores.replayurl2 = ARC_VIEWER_URL + "/?scoreID=" + json.data[i].id;
 							scores.mapper = json.data[i].leaderboard.song.mapper;
 							scores.mapcoverurl = json.data[i].leaderboard.song.coverImage;
 							scores.mapurl = BEATLEADER_URL + "/leaderboard/global/" + json.data[i].leaderboard.id;
@@ -399,13 +441,14 @@ async function DrawScore(userID) {
 
 							weightnum = json.data[i].weight;
 							ranknum = json.data[i].rank;
+							ppnum = json.data[i].pp;
 
 							console.log("Find score: " + scores.songauthor+ " - " + scores.mapname + " " + scores.subName);
 							console.log("Analyzing...");
 
 							post = false;
 				
-							if (ranknum <= POST_RANK_10) post = true;
+							if (ranknum <= POST_RANK_10 && ppnum > 0) post = true;
 							if (weightnum >= WEIGHT_TOP_8) post = true;
 							if (ranknum <= POST_RANK_100 && weightnum >= WEIGHT_TOP_20) post = true;
 							
@@ -425,7 +468,7 @@ async function DrawScore(userID) {
 											PP: bold("PP:　") + scores.pp,
 											Accuracy: bold("Accuracy:　") + scores.accuracy,
 											Difficulty: bold("Difficulty:　") + scores.difficulty,
-											'Open replay': bold("Open replay:　") + `[Link](${scores.replayurl})`,
+											'Open replay': bold("Open replay:　") + `[BeatLeader](${scores.replayurl})` + " or " + `[ArcViewer](${scores.replayurl2})`,
 										};
 										const EmbedCard = new EmbedBuilder()						
 										.setColor(embedcolor)
@@ -603,6 +646,121 @@ async function DrawMap(mapcode, REQ_CHANNEL_ID) {
 	}
 }
 
+async function CheckRankChange() {	
+		
+		let url = BLAPI_URL + "/players?sortBy=pp&count=" + RANK_TOP + "&countries=" + RANK_TOP_COUNTRIES + "&mapsType=ranked&ppType=general&friends=false";
+
+		await fetch(url, { method: "GET" })
+		.then((response) => {
+			if (response.ok) {
+				return response.json();
+			} else {
+				console.log("Error: " + response.status);
+				cancelProcess = true;
+			}
+		})
+		.then(async (json) => {	
+			if (json != undefined) {
+				try {			
+
+					for(var i = 0; i < json.data.length; i++) {
+						new_scorerank.push([ i, json.data[i].name, json.data[i].id, json.data[i].avatar, json.data[i].country , json.data[i].pp]);
+					}
+
+					try {
+						let loadrank = fs.readFileSync('rankdata.json', 'utf8');
+						old_scorerank = JSON.parse(loadrank);
+					} catch (error) {
+						console.log("rankdata.json not found... create new");
+						old_scorerank = new_scorerank;
+						fs.writeFileSync('rankdata.json', JSON.stringify(old_scorerank));
+					}
+
+					if (old_scorerank.length > 0) {
+						for(var x = 0; x < old_scorerank.length; x++) {
+							for(var y = 0; y < new_scorerank.length; y++) {
+								if ((old_scorerank[x][2] === new_scorerank[y][2]) && (old_scorerank[x][0] > new_scorerank[y][0]) && (old_scorerank[x][5] < new_scorerank[y][5])) {
+
+									try {
+
+										console.log(new_scorerank[y][1] + ": " + old_scorerank[x][0] + " -> " + new_scorerank[y][0]);
+
+										let playerlogo = new_scorerank[y][3];
+
+										let cislink = BEATLEADER_URL + "/ranking/1?countries=" + RANK_TOP_COUNTRIES+ "&sortBy=pp&order=desc&mapsType=ranked&ppType=general";
+
+										const chars = {
+											'_': '',
+											'*': '',
+											'|': '',
+											'`': '',
+											'>': '',
+											'-': '',
+											'~': '',
+										};
+
+										if (new_scorerank[y][0] === 0) {
+											var fields = {
+												1: "Leaderboard:　" + 'BeatLeader CIS TOP'+ RANK_TOP,
+												2: "Player:　" + fixbbcode(new_scorerank[y][1]),
+												3: "PP:　" + rounded(new_scorerank[y][5]),
+												4: "```",
+												6: "#" + (new_scorerank[y][0]+1) + "　" + new_scorerank[y][4] + "　" + fixbbcode(new_scorerank[y][1]) + "　" + rounded(new_scorerank[y][5]) + " ↑",
+												7: "#" + (new_scorerank[y+1][0]+1) + "　" + new_scorerank[y+1][4] + "　" + fixbbcode(new_scorerank[y+1][1]) + "　" + rounded(new_scorerank[y+1][5]) + " ↓",
+												8: "```",
+											};
+										} else {
+											var fields = {
+												1: "Leaderboard:　" + 'BeatLeader CIS TOP'+ RANK_TOP,
+												2: "Player:　" + fixbbcode(new_scorerank[y][1]),
+												3: "PP:　" + rounded(new_scorerank[y][5]),
+												4: "```",
+												5: "#" + (new_scorerank[y-1][0]+1) + "　" + new_scorerank[y-1][4] + "　" + fixbbcode(new_scorerank[y-1][1]) + "　" + rounded(new_scorerank[y-1][5]),
+												6: "#" + (new_scorerank[y][0]+1) + "　" + new_scorerank[y][4] + "　" + fixbbcode(new_scorerank[y][1]) + "　" + rounded(new_scorerank[y][5]) + " ↑",
+												7: "#" + (new_scorerank[y+1][0]+1) + "　" + new_scorerank[y+1][4] + "　" + fixbbcode(new_scorerank[y+1][1]) + "　" + rounded(new_scorerank[y+1][5]) + " ↓",
+												8: "```",
+											};
+										}
+
+										const EmbedCard = new EmbedBuilder()						
+										.setColor(Colors.DarkNavy)
+										.setTitle("Player ranking change")
+										.setURL(cislink)
+										.setThumbnail(playerlogo)
+										.addFields({ name: " ", value: Object.values(fields).join('\n'), inline: true })
+
+										client.channels.fetch(SCORES_CHANNEL_ID)
+										.then(channel=> channel.send({ embeds: [EmbedCard] }))
+										
+									} catch (error) {
+										console.log(error);
+									} 
+								}
+							}
+						}
+					}
+
+					try {
+						fs.writeFileSync('rankdata.json', JSON.stringify(new_scorerank));
+					} catch (error) {
+						console.log("rankdata.json save error!");
+					}
+
+					new_scorerank = [];
+
+				} catch (error) {
+					console.log(error);
+					cancelProcess = true;
+				} 
+			} else {
+				console.log("Failed get JSON");
+				console.log("");
+				cancelProcess = true;
+			}
+		})
+		.catch(error => console.log(error));
+}
+
 function addSeconds(date, seconds) {
 	const dateCopy = new Date(date);
 	dateCopy.setSeconds(date.getSeconds() + seconds);
@@ -628,11 +786,16 @@ function formatTime(sec) {
     var hours   = Math.floor(sec / 3600);
     var minutes = Math.floor((sec - (hours * 3600)) / 60);
     var seconds = sec - (hours * 3600) - (minutes * 60);
+	var time;
 
     //if (hours   < 10) {hours   = "0"+hours;}
     //if (minutes < 10) {minutes = "0"+minutes;}
     if (seconds < 10) {seconds = "0"+seconds;}
-    return minutes+':'+seconds;
+
+	if (hours > 0) time = hours+':'+minutes+':'+seconds
+	else time = minutes+':'+seconds;
+
+    return time;
 }
 
 var rounded = function(number){
@@ -645,4 +808,8 @@ function getRandomInt(max) {
 
 function DateTime(date) {
 	return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+}
+
+function fixbbcode(str) {
+	return str.replaceAll('*',' ').replaceAll('_',' ').replaceAll('|',' ').replaceAll('-',' ').replaceAll('>',' ').replaceAll('~',' ').replaceAll('`',' ');
 }
