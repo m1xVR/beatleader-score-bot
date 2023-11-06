@@ -38,7 +38,8 @@ This bot runs on [node.js](https://nodejs.org).
 
 # About country monitoring:
 
-By default, monitoring of the top 50 players from the CIS countries is set and monitoring is disabled. 
+By default, monitoring of the top 50 players from the CIS countries is set. Monitoring is disabled. 
+
 Important variables:
 - `ENABLE_COUNTRY_RANKCHANGE_MON` -> enable/disable monitoring
 - `RANK_TOP` -> number of ranks for monitoring
