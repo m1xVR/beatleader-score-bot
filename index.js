@@ -363,7 +363,8 @@ async function DrawScore(userID) {
 		mapurl: "",
 		songauthor: "",
 		subName: "",
-		modifiers: ""};
+		modifiers: ""
+	};
 
 	for(let key in scores) {
 		scores[key] = "";
@@ -371,11 +372,6 @@ async function DrawScore(userID) {
 
 	if(userID != undefined) {
 		var cancelProcess = false;
-
-		var weightnum;
-		var ranknum;
-		var post;
-		var ppnum;
 		
 		let url = BLAPI_URL + "/player/" + userID;
 
@@ -424,7 +420,17 @@ async function DrawScore(userID) {
 
 						let check = json.data[0].rank; 
 						
-						for(var i = 0; i < json.data.length; i++) {
+						for (var i = 0; i < json.data.length; i++) {
+
+							var weightnum;
+							var ranknum;
+							var post;
+							var ppnum;
+							var fullCombo = false;
+							var badCuts;
+							var missedNotes;
+							var bombCuts;
+							var wallsHit;
 
 							scores.mapname = json.data[i].leaderboard.song.name;
 							scores.songauthor = json.data[i].leaderboard.song.author;
@@ -439,6 +445,13 @@ async function DrawScore(userID) {
 							scores.mapurl = BEATLEADER_URL + "/leaderboard/global/" + json.data[i].leaderboard.id;
 							scores.modifiers = json.data[i].modifiers;
 							scores.subName = json.data[i].leaderboard.song.subName;
+
+							fullCombo = json.data[i].fullCombo;
+
+							badCuts = json.data[i].badCuts;
+							missedNotes = json.data[i].missedNotes;
+							bombCuts = json.data[i].bombCuts;
+							wallsHit = json.data[i].wallsHit;
 
 							weightnum = json.data[i].weight;
 							ranknum = json.data[i].rank;
@@ -462,33 +475,57 @@ async function DrawScore(userID) {
 								
 								if (scores.modifiers != "") scores.accuracy = scores.accuracy + " (" + scores.modifiers + ")";
 				
-									try {
-										const fields = {
+								try {
+									if (fullCombo) {
+										fields = {
+											Leaderboard: bold("Leaderboard:　") + 'BeatLeader',
+											Rank: bold("Rank:　") + scores.rank,
+											PP: bold("PP:　") + scores.pp,
+											Accuracy: bold("Accuracy:　") + scores.accuracy + " FC",
+											Difficulty: bold("Difficulty:　") + scores.difficulty,
+											'Open replay': bold("Open replay:　") + `[BeatLeader](${scores.replayurl})` + " or " + `[ArcViewer](${scores.replayurl2})`,
+										};
+									} else {
+
+										var notFCreason = "";
+										var nPref;
+
+										if (badCuts > 0) notFCreason = bold("BadCuts:　") + badCuts;
+										nPref = ((notFCreason === "") ? "" : "\n");
+										if (missedNotes > 0) notFCreason = notFCreason + nPref + bold("MissedNotes:　") + missedNotes;
+										nPref = ((notFCreason === "") ? "" : "\n");
+										if (bombCuts > 0) notFCreason = notFCreason + nPref + bold("BombCuts:　") + bombCuts;
+										nPref = ((notFCreason === "") ? "" : "\n");
+										if (wallsHit > 0) notFCreason = notFCreason + nPref + bold("WallsHit:　") + wallsHit;
+
+										fields = {
 											Leaderboard: bold("Leaderboard:　") + 'BeatLeader',
 											Rank: bold("Rank:　") + scores.rank,
 											PP: bold("PP:　") + scores.pp,
 											Accuracy: bold("Accuracy:　") + scores.accuracy,
 											Difficulty: bold("Difficulty:　") + scores.difficulty,
+											notFCreason,
 											'Open replay': bold("Open replay:　") + `[BeatLeader](${scores.replayurl})` + " or " + `[ArcViewer](${scores.replayurl2})`,
 										};
-										const EmbedCard = new EmbedBuilder()						
-										.setColor(embedcolor)
-										.setTitle(scores.songauthor+ " - " + scores.mapname + " "+ scores.subName)
-										.setURL(scores.mapurl)
-										.setAuthor({ name: scores.playername, iconURL: scores.avatar, url: url3 })
-										.setThumbnail(scores.mapcoverurl)
-										.setFooter({ text: scores.mapper })
-										.addFields({ name: '\u200B', value: Object.values(fields).join('\n'), inline: true })
+									}
+									const EmbedCard = new EmbedBuilder()						
+									.setColor(embedcolor)
+									.setTitle(scores.songauthor+ " - " + scores.mapname + " "+ scores.subName)
+									.setURL(scores.mapurl)
+									.setAuthor({ name: scores.playername, iconURL: scores.avatar, url: url3 })
+									.setThumbnail(scores.mapcoverurl)
+									.setFooter({ text: scores.mapper })
+									.addFields({ name: '\u200B', value: Object.values(fields).join('\n'), inline: true })
 				
-										client.channels.fetch(SCORES_CHANNEL_ID)
-										.then(channel=> channel.send({ embeds: [EmbedCard] }))
+									client.channels.fetch(SCORES_CHANNEL_ID)
+									.then(channel=> channel.send({ embeds: [EmbedCard] }))
 				
-										console.log("Done!")
-										console.log("");
+									console.log("Done!")
+									console.log("");
 				
-									} catch (error) {
-										console.log(error);
-									} 
+								} catch (error) {
+									console.log(error);
+								} 
 							} else {
 								console.log("Not pepechad!"); 
 								console.log("");
