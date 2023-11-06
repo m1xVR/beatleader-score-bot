@@ -5,8 +5,10 @@ This is a discord bot for tracking the scores of specified users on the BeatLead
 The score will be published when one of the conditions is met:
 
 - top 10 score on the ranked map;
-- top 8 score of personal pp scores;
-- top 100 score on the ranked map and top 25 score of personal scores.
+- top 8 score of personal ranked scores;
+- top 100 score on the ranked map and top 25 ranked score of personal scores.
+  
+\* criteries can be changed in any direction, you can also make unconditional scores posting
 
 Also bot can monitoring change ranking of top N players of county or some countries.
 
