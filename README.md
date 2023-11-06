@@ -55,6 +55,6 @@ Preview of map details message:
 
 ![img](./scr/bsrmessage.png)
 
-Preview of map details message:
+Preview of change country rank message:
 
 ![img](./scr/rankingchange.png)
