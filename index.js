@@ -43,7 +43,7 @@ var PlayersDataJSON;
 var working = false;
 var rc_mon_flag = false;
 
-var task = cron.schedule("*/2 * * * *", async function () {
+var task = cron.schedule("*/5 * * * *", async function () {
 
 	working = true;
 	
@@ -431,6 +431,7 @@ async function DrawScore(userID) {
 							var missedNotes;
 							var bombCuts;
 							var wallsHit;
+							var headset;
 
 							scores.mapname = json.data[i].leaderboard.song.name;
 							scores.songauthor = json.data[i].leaderboard.song.author;
@@ -474,11 +475,14 @@ async function DrawScore(userID) {
 								let url3 = BEATLEADER_URL + "/u/" + userID;
 								
 								if (scores.modifiers != "") scores.accuracy = scores.accuracy + " (" + scores.modifiers + ")";
+
+								headset = gethmd(json.data[i].hmd);
 				
 								try {
 									if (fullCombo) {
 										fields = {
 											Leaderboard: bold("Leaderboard:　") + 'BeatLeader',
+											Headset: bold("Headset:　") + headset,
 											Rank: bold("Rank:　") + scores.rank,
 											PP: bold("PP:　") + scores.pp,
 											Accuracy: bold("Accuracy:　") + scores.accuracy + " FC",
@@ -500,6 +504,7 @@ async function DrawScore(userID) {
 
 										fields = {
 											Leaderboard: bold("Leaderboard:　") + 'BeatLeader',
+											Headset: bold("Headset:　") + headset,
 											Rank: bold("Rank:　") + scores.rank,
 											PP: bold("PP:　") + scores.pp,
 											Accuracy: bold("Accuracy:　") + scores.accuracy,
@@ -850,4 +855,96 @@ function DateTime(date) {
 
 function fixbbcode(str) {
 	return str.replaceAll('*',' ').replaceAll('_',' ').replaceAll('|',' ').replaceAll('-',' ').replaceAll('>',' ').replaceAll('~',' ').replaceAll('`',' ');
+}
+
+function gethmd(hmd) {
+	var temp = hmd;
+	
+	switch (temp) {
+		case 1:
+			result = "Rift CV1";
+			break;
+		case 2:
+			result = "Vive";
+			break;
+		case 4:
+			result = "Vive Pro";
+			break;	
+		case 8:
+			result = "Windows Mixed Reality";
+			break;	
+		case 16:
+			result = "Rift S";
+			break;	
+		case 32:
+			result = "Quest";
+			break;	
+		case 33:
+			result = "Pico Neo 3";
+			break;	
+		case 34:
+			result = "Pico Neo 2";
+			break;	
+		case 35:
+			result = "Vive Pro 2";
+			break;	
+		case 36:
+			result = "Vive Elite";
+			break;
+		case 38:
+			result = "Pimax 8K";
+			break;										
+		case 39:
+			result = "Pimax 5K";
+			break;	
+		case 40:
+			result = "Pimax Artisan";
+			break;	
+		case 41:
+			result = "HP Reverb";
+			break;	
+		case 42:
+			result = "Samsung WMR";
+			break;	
+		case 45:
+			result = "Lenovo Explorer";
+			break;
+		case 46:
+			result = "Acer WMR";
+			break;
+		case 47:
+			result = "Vive Focus";
+			break;
+		case 53:
+			result = "Varjo";
+			break;
+		case 60:
+			result = "Pico 4";
+			break;
+		case 61:
+			result = "Quest Pro";
+			break;
+		case 64:
+			result = "Valve Index with Knuckles";
+			break;
+		case 66:
+			result = "Bigscreen Beyond";
+			break;
+		case 69:
+			result = "Varjo Aero";
+			break;
+		case 128:
+			result = "Vive Cosmos";
+			break;
+		case 256:
+			result = "Quest 2";
+			break;
+		case 512:
+			result = "Quest 3";
+			break;
+		default:
+			result = "Unknown headset";
+	}
+
+	return result;
 }
